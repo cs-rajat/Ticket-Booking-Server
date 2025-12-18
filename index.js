@@ -174,167 +174,191 @@ async function run() {
       res.send(result);
     });
     // Tickets related api
-    app.get('/tickets', async (req, res) => {
-      const query = { status: 'approved' };
+    app.get("/tickets", async (req, res) => {
+      const query = { status: "approved" };
       const result = await ticketsCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get('/tickets/admin', verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/tickets/admin", verifyToken, verifyAdmin, async (req, res) => {
       const result = await ticketsCollection.find().toArray();
       res.send(result);
     });
 
-    app.get('/tickets/vendor/:email', verifyToken, verifyVendor, async (req, res) => {
-      const email = req.params.email;
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'forbidden access' });
+    app.get(
+      "/tickets/vendor/:email",
+      verifyToken,
+      verifyVendor,
+      async (req, res) => {
+        const email = req.params.email;
+        if (email !== req.decoded.email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        const query = { vendorEmail: email };
+        const result = await ticketsCollection.find(query).toArray();
+        res.send(result);
       }
-      const query = { vendorEmail: email };
-      const result = await ticketsCollection.find(query).toArray();
-      res.send(result);
-    });
+    );
 
-    app.get('/tickets/:id', async (req, res) => {
+    app.get("/tickets/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await ticketsCollection.findOne(query);
       res.send(result);
     });
 
-    app.post('/tickets', verifyToken, verifyVendor, async (req, res) => {
+    app.post("/tickets", verifyToken, verifyVendor, async (req, res) => {
       const ticket = req.body;
-      ticket.status = 'pending';
+      ticket.status = "pending";
       ticket.advertised = false;
       const result = await ticketsCollection.insertOne(ticket);
       res.send(result);
     });
 
-    app.patch('/tickets/:id', verifyToken, verifyVendor, async (req, res) => {
+    app.patch("/tickets/:id", verifyToken, verifyVendor, async (req, res) => {
       const id = req.params.id;
       const ticket = req.body;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          ...ticket
-        }
-      }
+          ...ticket,
+        },
+      };
       const result = await ticketsCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
-    app.delete('/tickets/:id', verifyToken, verifyVendor, async (req, res) => {
+    app.delete("/tickets/:id", verifyToken, verifyVendor, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await ticketsCollection.deleteOne(query);
       res.send(result);
     });
 
-    app.patch('/tickets/status/:id', verifyToken, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const { status } = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          status: status
-        }
+    app.patch(
+      "/tickets/status/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { status } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            status: status,
+          },
+        };
+        const result = await ticketsCollection.updateOne(filter, updatedDoc);
+        res.send(result);
       }
-      const result = await ticketsCollection.updateOne(filter, updatedDoc);
-      res.send(result);
-    });
+    );
 
-    app.patch('/tickets/advertise/:id', verifyToken, verifyAdmin, async (req, res) => {
-      const id = req.params.id;
-      const { advertised } = req.body;
-      const filter = { _id: new ObjectId(id) };
-      const updatedDoc = {
-        $set: {
-          advertised: advertised
-        }
+    app.patch(
+      "/tickets/advertise/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const { advertised } = req.body;
+        const filter = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            advertised: advertised,
+          },
+        };
+        const result = await ticketsCollection.updateOne(filter, updatedDoc);
+        res.send(result);
       }
-      const result = await ticketsCollection.updateOne(filter, updatedDoc);
-      res.send(result);
-    });
+    );
 
     // Bookings related api
-    app.post('/bookings', verifyToken, async (req, res) => {
+    app.post("/bookings", verifyToken, async (req, res) => {
       const booking = req.body;
-      booking.status = 'pending';
+      booking.status = "pending";
       const result = await bookingsCollection.insertOne(booking);
       res.send(result);
     });
 
-    app.get('/bookings/user/:email', verifyToken, async (req, res) => {
+    app.get("/bookings/user/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'forbidden access' });
+        return res.status(403).send({ message: "forbidden access" });
       }
       const query = { userEmail: email };
       const result = await bookingsCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get('/bookings/vendor/:email', verifyToken, verifyVendor, async (req, res) => {
-      const email = req.params.email;
-      if (email !== req.decoded.email) {
-        return res.status(403).send({ message: 'forbidden access' });
-      }
-      // Find tickets by this vendor
-      const tickets = await ticketsCollection.find({ vendorEmail: email }).toArray();
-      const ticketIds = tickets.map(ticket => ticket._id.toString());
-      
-      // Find bookings for these tickets
-      // Note: booking should store ticketId
-      const query = { ticketId: { $in: ticketIds } };
-      const result = await bookingsCollection.find(query).toArray();
-      res.send(result);
-    });
+    app.get(
+      "/bookings/vendor/:email",
+      verifyToken,
+      verifyVendor,
+      async (req, res) => {
+        const email = req.params.email;
+        if (email !== req.decoded.email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        // Find tickets by this vendor
+        const tickets = await ticketsCollection
+          .find({ vendorEmail: email })
+          .toArray();
+        const ticketIds = tickets.map((ticket) => ticket._id.toString());
 
-    app.patch('/bookings/:id', verifyToken, async (req, res) => {
+        // Find bookings for these tickets
+        // Note: booking should store ticketId
+        const query = { ticketId: { $in: ticketIds } };
+        const result = await bookingsCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+
+    app.patch("/bookings/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const { status } = req.body;
       const filter = { _id: new ObjectId(id) };
       const updatedDoc = {
         $set: {
-          status: status
-        }
-      }
+          status: status,
+        },
+      };
       const result = await bookingsCollection.updateOne(filter, updatedDoc);
       res.send(result);
     });
 
     // Payment Intent
-    app.post('/create-payment-intent', verifyToken, async (req, res) => {
+    app.post("/create-payment-intent", verifyToken, async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      console.log(amount, 'amount inside the intent')
+      console.log(amount, "amount inside the intent");
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
-        currency: 'usd',
-        payment_method_types: ['card']
+        currency: "usd",
+        payment_method_types: ["card"],
       });
 
       res.send({
-        clientSecret: paymentIntent.client_secret
-      })
+        clientSecret: paymentIntent.client_secret,
+      });
     });
 
     // Stats
-    app.get('/admin-stats', verifyToken, verifyAdmin, async (req, res) => {
+    app.get("/admin-stats", verifyToken, verifyAdmin, async (req, res) => {
       const users = await usersCollection.estimatedDocumentCount();
       const tickets = await ticketsCollection.estimatedDocumentCount();
       const bookings = await bookingsCollection.estimatedDocumentCount();
 
       // best way to get sum of a field is to use aggregate
-      const payments = await bookingsCollection.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalRevenue: { $sum: '$price' }
-          }
-        }
-      ]).toArray();
+      const payments = await bookingsCollection
+        .aggregate([
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: "$price" },
+            },
+          },
+        ])
+        .toArray();
 
       const revenue = payments.length > 0 ? payments[0].totalRevenue : 0;
 
@@ -342,9 +366,9 @@ async function run() {
         users,
         tickets,
         bookings,
-        revenue
-      })
-    })
+        revenue,
+      });
+    });
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
