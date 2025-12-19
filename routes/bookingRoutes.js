@@ -5,10 +5,7 @@ const {
   getVendorBookings,
   updateBookingStatus,
 } = require("../controllers/bookingController");
-const {
-  verifyToken,
-  verifyVendor,
-} = require("../middlewares/authMiddleware");
+const { verifyToken, verifyVendor } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 router.post("/", verifyToken, createBooking);

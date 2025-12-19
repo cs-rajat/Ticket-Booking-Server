@@ -1,7 +1,7 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.example.mongodb.net/?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@ticket.2cd4lt9.mongodb.net/?appName=ticket`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -15,7 +15,7 @@ let db;
 
 const connectDB = async () => {
   try {
-    // await client.connect();
+    await client.connect();
     db = client.db("ticketBookingDB");
     console.log("Successfully connected to MongoDB!");
     return db;
@@ -26,10 +26,10 @@ const connectDB = async () => {
 };
 
 const getDB = () => {
-    if (!db) {
-        throw new Error("Database not initialized");
-    }
-    return db;
-}
+  if (!db) {
+    throw new Error("Database not initialized");
+  }
+  return db;
+};
 
 module.exports = { connectDB, getDB, client };

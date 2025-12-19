@@ -42,4 +42,22 @@ const verifyVendor = async (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, verifyAdmin, verifyVendor };
+const verifyAdminOrVendor = async (req, res, next) => {
+  const email = req.decoded.email;
+  const db = getDB();
+  const usersCollection = db.collection("users");
+  const query = { email: email };
+  const user = await usersCollection.findOne(query);
+  const isAllowed = user?.role === "admin" || user?.role === "vendor";
+  if (!isAllowed) {
+    return res.status(403).send({ message: "forbidden access" });
+  }
+  next();
+};
+
+module.exports = {
+  verifyToken,
+  verifyAdmin,
+  verifyVendor,
+  verifyAdminOrVendor,
+};
